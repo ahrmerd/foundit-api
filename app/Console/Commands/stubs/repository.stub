@@ -1,0 +1,29 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Repositories\BaseRepository;
+use _namespacemodel;
+
+
+class {{ class }} extends BaseRepository
+{
+    public function getFilters(){
+        return _filters;
+    }
+    public function getIncludes(){
+        return _includes;
+    }
+    public function getSorts(){
+        return _sorts;
+    }
+
+
+    /**
+     * Configure the Model
+     **/
+    public function model()
+    {
+        return _model::class;
+    }
+}
