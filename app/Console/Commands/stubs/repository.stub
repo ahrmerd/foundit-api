@@ -4,6 +4,7 @@ namespace {{ namespace }};
 
 use App\Repositories\BaseRepository;
 use _namespacemodel;
+use Spatie\QueryBuilder\AllowedFilter;
 
 
 class {{ class }} extends BaseRepository

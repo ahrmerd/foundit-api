@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Spatie\QueryBuilder\QueryBuilder;
 use Exception;
+
 /**
  * Class BaseRepository.
  */
@@ -28,7 +29,7 @@ abstract class BaseRepository
      *
      * @var null|\lluminate\Http\Resources\Json\JsonResource
      */
-    protected JsonResource $resource;
+    protected $resource;
 
     abstract protected function getFilters();
     abstract protected function getIncludes();
@@ -40,33 +41,21 @@ abstract class BaseRepository
      */
     protected $query;
 
-    /**
-     * Alias for the query limit.
-     *
-     * @var int
-     */
-    protected $take;
 
-    /**
-     * Array of related models to eager load.
-     *
-     * @var array
-     */
-    protected $with = [];
 
-    public function setLimit(Builder $query, $count = 10): Builder
+    public function setLimit(Builder $query): Builder
     {
-        return $query->when(request()->has('limit'), fn (Builder $query) => $query->limit($count));
+        return $query->when(request()->has('limit'), fn (Builder $query) => $query->limit(request()->query('limit')));
     }
 
-    public function setLimitAndOffset(Builder $query, $count = 10, $from = 0)
+    public function setLimitAndOffset(Builder $query)
     {
-        return $this->setOffset($this->setLimit($query, $count), $from);
+        return $this->setOffset($this->setLimit($query));
     }
 
     public function setOffset(Builder $query, $from = 0): Builder
     {
-        return $query->when(request()->has('offset'), fn (Builder $query) => $query->offset($from));
+        return $query->when(request()->has('offset'), fn (Builder $query) => $query->offset(request()->query('limit')));
     }
 
     /**
@@ -87,7 +76,7 @@ abstract class BaseRepository
 
     /**
      * @return Model|mixed
-     * @throws GeneralException
+     * @throws Exception
      */
     public function makeModel()
     {
@@ -125,7 +114,6 @@ abstract class BaseRepository
      */
     public function all(array $columns = ['*'])
     {
-        $this->newQuery()->eagerLoad();
 
         $models = $this->query->get($columns);
 
@@ -163,19 +151,6 @@ abstract class BaseRepository
     }
 
     /**
-     * Delete one or more model records from the database.
-     *
-     * @return mixed
-     */
-    public function delete()
-    {
-
-        $result = $this->query->delete();
-
-        return $result;
-    }
-
-    /**
      * Delete the specified model record from the database.
      *
      * @param $id
@@ -185,8 +160,7 @@ abstract class BaseRepository
      */
     public function deleteById($id): bool
     {
-
-        return $this->getById($id)->delete();
+        return $this->model->newQuery()->findOrFail($id)->delete();
     }
 
     /**
@@ -228,6 +202,26 @@ abstract class BaseRepository
         return $models;
     }
 
+    public function getRequestedIncludes()
+    {
+        $includes = [];
+        $allowedIncludes = $this->getIncludes();
+        if (request()->has('include')) {
+            $requestedIncludes = explode(',',  request()->input('include'));
+            foreach ($requestedIncludes as $relationship) {
+                if (in_array(strtolower($relationship), $allowedIncludes)) {
+                    array_push($includes, $relationship);
+                }
+            }
+        }
+
+        return $includes;
+    }
+
+    public function appendIncludes(Builder $query)
+    {
+        return request()->has('include')  ? $query->with($this->getRequestedIncludes()) : $query;
+    }
     /**
      * Get the specified model record from the database.
      *
@@ -238,21 +232,18 @@ abstract class BaseRepository
      */
     public function getById($id, array $columns = ['*'])
     {
-        $this->newQuery()->eagerLoad();
-
-        return $this->query->findOrFail($id, $columns);
+        return new $this->resource($this->appendIncludes($this->model->newQuery())->findOrFail($id));
     }
 
     public function index()
     {
         $total = $this->model->count();
-        $query = QueryBuilder::for($this->model)
-            ->allowedIncludes($this->includes)
-            ->allowedFilters($this->filters)
-            ->allowedSorts($this->sorts);
-        $query = $this->setLimitAndOffset($query);
+        $query = $this->setLimitAndOffset($this->model->query());
+        $query = QueryBuilder::for($query)
+            ->allowedSorts([...$this->getSorts(), 'id', 'created_at'])
+            ->allowedIncludes($this->getIncludes())
+            ->allowedFilters($this->getFilters());
         $models = request()->has('page') ? $query->paginate() : $query->get();
-        // DepartmentResource::collection($model)->additional()
         if ($this->resource) {
             return $this->resource::collection(($models))->additional(['Total-Count' => $total]);
         } else {
@@ -271,68 +262,8 @@ abstract class BaseRepository
      */
     public function updateById($id, array $data, array $options = [])
     {
-
-        $model = $this->getById($id);
-
+        $model = $this->model->newQuery()->findOrFail($id);
         $model->update($data, $options);
-
         return $model;
-    }
-
-    /**
-     * Set the query limit.
-     *
-     * @param int $limit
-     *
-     * @return $this
-     */
-    public function limit($limit)
-    {
-        $this->take = $limit;
-        return $this;
-    }
-
-    /**
-     * Set Eloquent relationships to eager load.
-     *
-     * @param $relations
-     *
-     * @return $this
-     */
-    public function with($relations)
-    {
-        if (is_string($relations)) {
-            $relations = func_get_args();
-        }
-
-        $this->with = $relations;
-
-        return $this;
-    }
-
-    /**
-     * Create a new instance of the model's query builder.
-     *
-     * @return $this
-     */
-    protected function newQuery()
-    {
-        $this->query = $this->model->newQuery();
-
-        return $this;
-    }
-
-    /**
-     * Add relationships to the query builder to eager load.
-     *
-     * @return $this
-     */
-    protected function eagerLoad()
-    {
-        foreach ($this->with as $relation) {
-            $this->query->with($relation);
-        }
-
-        return $this;
     }
 }

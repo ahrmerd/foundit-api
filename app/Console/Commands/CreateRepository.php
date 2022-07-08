@@ -15,6 +15,8 @@ use Spatie\LaravelIgnition\Recorders\DumpRecorder\Dump;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
+use Spatie\QueryBuilder\AllowedFilter;
+
 
 #[AsCommand(name: 'make:repository')]
 class CreateRepository extends GeneratorCommand
@@ -104,7 +106,7 @@ class CreateRepository extends GeneratorCommand
             if ($field == 'exit') {
                 break;
             }
-            array_push($fields, $field);
+            array_push($fields, strtolower($field));
         }
         return json_encode($fields);
     }
@@ -125,17 +127,28 @@ class CreateRepository extends GeneratorCommand
 
     protected function getFilters()
     {
-        $this->info('Please enter the filters allowed. input exit if you are done');
+        $this->info('Please enter the filters allowed. if you want an exact append \'-\' to your input e.g -user_id. input exit if you are done');
         $fields = [];
+        $exacts = [];
+        $format = 'AllowedFilter::exact(\'field\')';
         while (true) {
             $field = $this->ask('field');
             if ($field == 'exit') {
                 break;
             }
+            if ($field == str_starts_with($field, '-')) {
+                $field = ltrim($field, '-');
+                array_push($exacts, $field);
+                $field = "placeholder$field";
+            };
             array_push($fields, $field);
         }
-        return json_encode($fields);
-        // return $fields;
+        $str = json_encode($fields);
+        foreach ($exacts as $exact) {
+            $preparedString = str_replace('field', $exact, $format);
+            $str = str_replace("\"placeholder$exact\"", $preparedString, $str);
+        }
+        return $str;
     }
 
     protected function checkForBaseRepository()
