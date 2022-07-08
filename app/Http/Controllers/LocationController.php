@@ -5,9 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
 use App\Models\Location;
+use App\Repositories\LocationRepository;
 
 class LocationController extends Controller
 {
+
+    private $repo;
+
+    public function __construct(LocationRepository $repo)
+    {
+        $this->repo = $repo;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +23,7 @@ class LocationController extends Controller
      */
     public function index()
     {
-        //
+        return $this->repo->index();
     }
 
     /**
@@ -26,7 +34,7 @@ class LocationController extends Controller
      */
     public function store(StoreLocationRequest $request)
     {
-        //
+        return $this->repo->create($request->only(['state_id', 'name']));
     }
 
     /**
@@ -35,9 +43,9 @@ class LocationController extends Controller
      * @param  \App\Models\Location  $location
      * @return \Illuminate\Http\Response
      */
-    public function show(Location $location)
+    public function show($id)
     {
-        //
+        return $this->repo->getById($id);
     }
 
     /**
@@ -49,7 +57,7 @@ class LocationController extends Controller
      */
     public function update(UpdateLocationRequest $request, Location $location)
     {
-        //
+        return $location->update($request->only(['state_id', 'name']));
     }
 
     /**
@@ -60,6 +68,6 @@ class LocationController extends Controller
      */
     public function destroy(Location $location)
     {
-        //
+        return $location->delete();
     }
 }

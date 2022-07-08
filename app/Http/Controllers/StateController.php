@@ -5,9 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreStateRequest;
 use App\Http\Requests\UpdateStateRequest;
 use App\Models\State;
+use App\Repositories\StateRepository;
 
 class StateController extends Controller
 {
+
+    private $stateRepository;
+
+    public function __construct(StateRepository $stateRepo)
+    {
+        $this->stateRepository = $stateRepo;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +23,7 @@ class StateController extends Controller
      */
     public function index()
     {
-        //
+        return $this->stateRepository->index();
     }
 
     /**
@@ -26,7 +34,7 @@ class StateController extends Controller
      */
     public function store(StoreStateRequest $request)
     {
-        //
+        return $this->stateRepository->create($request->only('name'));
     }
 
     /**
@@ -35,9 +43,9 @@ class StateController extends Controller
      * @param  \App\Models\State  $state
      * @return \Illuminate\Http\Response
      */
-    public function show(State $state)
+    public function show($id)
     {
-        //
+        return $this->stateRepository->getById($id);
     }
 
     /**
@@ -49,7 +57,7 @@ class StateController extends Controller
      */
     public function update(UpdateStateRequest $request, State $state)
     {
-        //
+        return $state->update($request->only('name'));
     }
 
     /**
@@ -60,6 +68,6 @@ class StateController extends Controller
      */
     public function destroy(State $state)
     {
-        //
+        return $state->delete();
     }
 }
