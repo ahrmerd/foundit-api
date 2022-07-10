@@ -17,6 +17,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    const TYPE = ['disable' => 0, 'user' => 1, 'admin' => 2, 'super' => 3];
     protected $fillable = [
         'name',
         'email',
@@ -41,4 +42,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
 }
