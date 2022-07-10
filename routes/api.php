@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{StateController, LocationController};
+use App\Http\Controllers\{StateController, LocationController, CategoryController, ItemController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\{RegisterController, LoginController};
@@ -25,6 +25,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::resource('states', StateController::class);
 Route::resource('locations', LocationController::class);
+
+Route::resource('categories', CategoryController::class);
+Route::resource('items', ItemController::class);
+
 
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [LoginController::class, 'login']);
