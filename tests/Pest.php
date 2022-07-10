@@ -11,13 +11,8 @@
 |
 */
 
-use App\Models\Location;
-use App\Models\State;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-use function Pest\Laravel\expectsEvents;
-use function Pest\Laravel\getDispatched;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(Tests\TestCase::class)->in('Feature');
 uses(RefreshDatabase::class)->in('Feature');
@@ -72,13 +67,13 @@ function validationTests($url, array $info, $model)
     foreach ($info as $key => $val) {
         $validations = $val['validations'];
         foreach ($validations as $validation) {
+            $model::query()->delete();
             if ($validation == 'required') {
                 ensureRequiredValidation($url, $key, $data);
             }
             if ($validation == 'unique') {
                 ensureUniqueValidation($url, $key, $data);
             }
-            $model::query()->delete();
         }
     }
 }
@@ -97,23 +92,19 @@ function showTests($url, $model, $relationships)
 function indexTests($url, $model, $info, $relationships)
 {
     $it = test();
-    $models = $model::factory()->count(10)->create();
+    $models = $model::factory()->count(2)->create();
     $response = $it->get("$url")->assertStatus(200);
     expect($response->json()['data'])->toMatchArray($models->toArray());
     ensureSortsByLatestAndLimit($url, $model);
     foreach ($info as $key => $value) {
-
         $abilities = $value['abilities'];
+        foreach ($relationships as $relationshipName => $relationshipInfo) {
+            ensureIncludeIndex($url, $model, $relationshipName, $relationshipInfo['class'], $relationshipInfo['type']);
+        }
+        $model::query()->delete();
         foreach ($abilities as $ability) {
             if ($ability == 'filter') {
-
                 ensureFilterIndex($url, $model, $key);
-            }
-            if ($ability == 'include') {
-                foreach ($relationships as $relationshipName => $relationshipInfo) {
-                    ensureIncludeIndex($url, $model, $relationshipName, $relationshipInfo['class']);
-                }
-                # code...
             }
         }
     }
@@ -214,14 +205,22 @@ function ensureSortsByLatestAndLimit($url, $model)
 
 
 
-function ensureIncludeIndex($url, $model, $relationshipName, $relationshipClass)
+function ensureIncludeIndex($url, $model, $relationshipName, $relationshipClass, $relationshipType)
 {
     $it = test();
-    $count = 2;
-    $model::factory()->has($relationshipClass::factory()->count($count))->count(5)->create();
+    $count = 5;
+    if ($relationshipType == 'belongsTo') {
+        $model::factory()->count(3)->create();
+    }
+    if ($relationshipType == 'hasMany') {
+        $model::factory()->has($relationshipClass::factory()->count($count))->count(4)->create();
+    }
     $response = $it->get("$url/?include=$relationshipName")->assertStatus(200);
     foreach ($response->json()['data'] as $key => $item) {
         expect($item)->toHaveKey($relationshipName);
+        if ($relationshipType == 'hasMany') {
+            expect(count($item[$relationshipName]))->toBe($count);
+        }
     }
 }
 
