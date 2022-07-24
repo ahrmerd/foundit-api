@@ -235,10 +235,10 @@ abstract class BaseRepository
         return new $this->resource($this->appendIncludes($this->model->newQuery())->findOrFail($id));
     }
 
-    public function index()
+    public function index(Builder $query = null)
     {
         $total = $this->model->count();
-        $query = $this->setLimitAndOffset($this->model->query());
+        $query = $query ? $this->setLimitAndOffset($query) : $this->setLimitAndOffset($this->model->query());
         $query = QueryBuilder::for($query)
             ->allowedSorts([...$this->getSorts(), 'id', 'created_at'])
             ->allowedIncludes($this->getIncludes())

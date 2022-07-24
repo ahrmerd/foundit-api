@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Builder;
 
 trait HasStatus
 {
-    private $statuses = ['active' => 1, 'disabled' => 0, 'promoted' => 2];
+    static private $statuses = ['active' => 1, 'disabled' => 0, 'promoted' => 2];
 
+    static public function STATUSES()
+    {
+        return self::$statuses;
+    }
     public function scopeActive(Builder $query)
     {
         $query->where('status', $this->statuses['active']);

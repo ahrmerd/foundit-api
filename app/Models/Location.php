@@ -13,4 +13,9 @@ class Location extends Model
     {
         return $this->belongsTo(State::class);
     }
+
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
 }

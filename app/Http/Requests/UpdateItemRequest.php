@@ -26,6 +26,7 @@ class UpdateItemRequest extends FormRequest
         return [
             'name' => 'required|unique:items,name',
             'category_id' => 'required|exists:categories,id',
+            'location_id' => 'required|exists:locations,id',
             'description' => 'nullable|string'
         ];
     }

@@ -16,6 +16,9 @@ class ItemController extends Controller
     public function __construct(ItemRepository $repo)
     {
         $this->repo = $repo;
+        $this->authorizeResource(Item::class, 'item', [
+            'except' => ['index', 'show']
+        ]);
     }
     public function index()
     {
@@ -24,8 +27,7 @@ class ItemController extends Controller
 
     public function store(StoreItemRequest $request)
     {
-
-        return $this->repo->create(array_merge($request->only(['name', 'description', 'category_id']), ['user_id' => auth()->id()]));
+        return $this->repo->create(array_merge($request->only(['name', 'description', 'category_id', 'location_id']), ['user_id' => auth()->id()]));
     }
 
     public function show($id)
@@ -35,7 +37,7 @@ class ItemController extends Controller
 
     public function update(UpdateItemRequest $request, Item $item)
     {
-        return $item->update($request->only(['name', 'description', 'category_id']));
+        return $item->update($request->only(['name', 'description', 'category_id', 'location_id']));
     }
 
     public function destroy(Item $item)

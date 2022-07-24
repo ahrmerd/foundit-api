@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('phone');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->unsignedTinyInteger('status')->default(User::TYPE['user']);
+            $table->unsignedTinyInteger('type')->default(User::TYPE['user']);
             $table->rememberToken();
             $table->timestamps();
         });

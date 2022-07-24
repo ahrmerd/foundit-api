@@ -13,4 +13,9 @@ class State extends Model
     {
         return $this->hasMany(Location::class);
     }
+
+    public function items()
+    {
+        return $this->hasManyThrough(Item::class, Location::class);
+    }
 }

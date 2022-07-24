@@ -11,11 +11,11 @@ class ItemRepository extends BaseRepository
 {
     public function getFilters()
     {
-        return [AllowedFilter::exact('category_id'), AllowedFilter::exact('user_id'), "name"];
+        return [AllowedFilter::exact('category_id'), AllowedFilter::exact('user_id'), AllowedFilter::exact('location_id'),  "name"];
     }
     public function getIncludes()
     {
-        return ["category", "user"];
+        return ["category", "user", "location"];
     }
     public function getSorts()
     {

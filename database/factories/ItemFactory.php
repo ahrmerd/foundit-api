@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\{Category, User};
+use App\Models\{Category, Item, Location, User};
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,7 +21,8 @@ class ItemFactory extends Factory
             'name' => fake()->unique()->word(),
             'description' => fake()->sentence(10),
             'category_id' => Category::factory(),
-            'status' => fake()->numberBetween(0, 4),
+            'location_id' => Location::factory(),
+            'status' => fake()->randomElement(Item::STATUSES()),
             'user_id' => User::factory(),
         ];
     }

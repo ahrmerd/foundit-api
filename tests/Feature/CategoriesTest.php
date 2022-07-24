@@ -1,8 +1,9 @@
 <?php
 
 use App\Models\Category;
-use App\Models\{Location, Item};
+use App\Models\{Location, Item, User};
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
@@ -24,11 +25,16 @@ beforeEach(function () {
     $this->relationships = ['items' => ['class' => Item::class, 'type' => 'hasMany']];
 });
 
-it('can create a category', function () {
+
+it('only admin create a category', function () {
+    asUser();
+    creationTests($this->endPoint, $this->fields, 'categories', 403);
+    asAdmin();
     creationTests($this->endPoint, $this->fields, 'categories');
 });
 
 it('validate the field to create a category', function () {
+    asAdmin();
     validationTests($this->endPoint, $this->fields, Category::class);
 });
 
@@ -44,10 +50,19 @@ it('can return a list of categories', function () {
     indexTests($this->endPoint, Category::class, $this->fields, $this->relationships);
 });
 
-it('can delete a category', function () {
+
+
+it('only admin can delete', function () {
+    asUser();
+    deleteTests($this->endPoint, Category::class, null, 403);
+    asAdmin();
     deleteTests($this->endPoint, Category::class);
 });
 
-it('can update a category', function () {
+
+it('only admin can update a category', function () {
+    asUser();
+    updateTests($this->endPoint, 'categories', Category::class, $this->fields, null, 403);
+    asAdmin();
     updateTests($this->endPoint, 'categories', Category::class, $this->fields);
 });

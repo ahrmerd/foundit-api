@@ -28,11 +28,15 @@ beforeEach(function () {
     $this->relationships = ['state' => ['class' => State::class, 'type' => 'belongsTo']];
 });
 
-it('can create a location', function () {
+it('only admin can create a location', function () {
+    asUser();
+    creationTests($this->endPoint, $this->fields, 'locations', 403);
+    asAdmin();
     creationTests($this->endPoint, $this->fields, 'locations');
 });
 
 it('validate the fields to create a location', function () {
+    asAdmin();
     validationTests($this->endPoint, $this->fields, Location::class);
 });
 
@@ -48,10 +52,16 @@ it('can return a list of locations', function () {
     indexTests($this->endPoint, Location::class, $this->fields, $this->relationships);
 });
 
-it('can delete a location', function () {
+it('only admin can delete a location', function () {
+    asUser();
+    deleteTests($this->endPoint, Location::class, null, 403);
+    asAdmin();
     deleteTests($this->endPoint, Location::class);
 });
 
-it('can update a location', function () {
+it('only admin can update a location', function () {
+    asUser();
+    updateTests($this->endPoint, 'locations', Location::class, $this->fields, null, 403);
+    asAdmin();
     updateTests($this->endPoint, 'locations', Location::class, $this->fields);
 });

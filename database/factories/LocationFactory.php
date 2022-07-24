@@ -15,11 +15,17 @@ class LocationFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    private function getState()
+    {
+        $states = State::query()->get();
+        $state = ($states->isEmpty()) ? State::factory() : $states->random(1)->first()->id;
+        return $state;
+    }
     public function definition()
     {
         return [
-            'name' => fake()->unique()->word(),
-            'state_id' => State::factory()
+            'name' => fake()->word(),
+            'state_id' => $this->getState(),
         ];
     }
 }

@@ -26,20 +26,26 @@ beforeEach(function () {
             'validations' => ['required'],
             'abilities' => ['filter'],
         ],
+        'location_id' => [
+            'value' => Location::factory()->create()->id,
+            'validations' => ['required'],
+            'abilities' => ['filter'],
+        ],
     ];
     $this->relationships = [
+        'location' => ['class' => Location::class, 'type' => 'belongsTo'],
         'category' => ['class' => Category::class, 'type' => 'belongsTo'],
         'user' => ['class' => User::class, 'type' => 'belongsTo']
     ];
 });
 
 it('can create a item', function () {
-    Sanctum::actingAs(User::factory()->create());
+    asUser();
     creationTests($this->endPoint, $this->fields, 'items');
 });
 
 it('validate the field to create a item', function () {
-    Sanctum::actingAs(User::factory()->create());
+    asUser();
     validationTests($this->endPoint, $this->fields, Item::class);
 });
 
@@ -56,9 +62,23 @@ it('can return a list of items', function () {
 });
 
 it('can delete a item', function () {
-    deleteTests($this->endPoint, Item::class);
+    $user = asUser();
+    deleteTests($this->endPoint, Item::class, $user);
 });
 
 it('can update a item', function () {
-    updateTests($this->endPoint, 'items', Item::class, $this->fields);
+    $user = asUser();
+    updateTests($this->endPoint, 'items', Item::class, $this->fields, $user);
+});
+
+it('can allow an admin to update or delete an item', function () {
+    asAdmin();
+    updateTests($this->endPoint, 'items', Item::class, $this->fields, null);
+    deleteTests($this->endPoint, Item::class, null);
+});
+
+it('dosent allow a foreign user to update or delete an item', function () {
+    $user = asUser();
+    updateTests($this->endPoint, 'items', Item::class, $this->fields, null, 403);
+    deleteTests($this->endPoint, Item::class, null, 403);
 });

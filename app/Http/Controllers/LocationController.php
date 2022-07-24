@@ -14,6 +14,9 @@ class LocationController extends Controller
 
     public function __construct(LocationRepository $repo)
     {
+        $this->authorizeResource(Location::class, 'location', [
+            'except' => ['index', 'show']
+        ]);
         $this->repo = $repo;
     }
     /**
